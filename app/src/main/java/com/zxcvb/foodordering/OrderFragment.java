@@ -14,12 +14,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class OrderFragment extends Fragment {
 
     RecyclerView rvOrder;
     List<CartModel> orderModelList;
+    List<Object> groupedList;
     SharedPrefManager prefManager;
     OrderAdapter adapter;
 
@@ -31,7 +34,7 @@ public class OrderFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_order, container, false);
     }
@@ -43,20 +46,22 @@ public class OrderFragment extends Fragment {
         prefManager = new SharedPrefManager(view.getContext());
         rvOrder = view.findViewById(R.id.rvOrder);
         queryUserCart();
+        groupedList = groupByRestaurant(orderModelList);
 
-        adapter = new OrderAdapter(orderModelList);
+        adapter = new OrderAdapter(groupedList);
         rvOrder.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rvOrder.setAdapter(adapter);
 
     }
 
-    public void queryUserCart(){
+    public void queryUserCart() {
         String userId = AuthActivity.LOGGEDUSER.getId();
         orderModelList = prefManager.loadCartModel();
         List<CartModel> result = new ArrayList<>();
 
-        for (int i = 0; i < orderModelList.size(); i++){
-            if (orderModelList.get(i).getCustomerId().equals(userId) && orderModelList.get(i).getStatus().equals("preparing")){
+        for (int i = 0; i < orderModelList.size(); i++) {
+            if (orderModelList.get(i).getCustomerId().equals(userId)
+                    && !orderModelList.get(i).getStatus().equals("cart")) {
                 result.add(orderModelList.get(i));
             }
         }
@@ -64,7 +69,16 @@ public class OrderFragment extends Fragment {
         orderModelList = result;
     }
 
-    public void setStatus(){
-
+    public List<Object> groupByRestaurant(List<CartModel> cartItems) {
+        Map<String, List<CartModel>> grouped = new LinkedHashMap<>();
+        for (CartModel item : cartItems) {
+            grouped.computeIfAbsent(item.getRestaurantName(), k -> new ArrayList<>()).add(item);
+        }
+        List<Object> result = new ArrayList<>();
+        for (Map.Entry<String, List<CartModel>> entry : grouped.entrySet()) {
+            result.add(entry.getKey());
+            result.addAll(entry.getValue());
+        }
+        return result;
     }
 }

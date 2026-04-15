@@ -49,13 +49,10 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(bottomNav, navController);
     }
 
-    void logout(){
-        for (int i = 0; i <= customerList.size() - 1; i++) {
-            if(customerList.get(i).getStatus().equals("logged in")){
-                customerList.get(i).setStatus("logged out");
-                prefManager.saveCustomer(customerList);
-                finish();
-            }
-        }
+    void logout() {
+        CustomerModel user = AuthActivity.LOGGEDUSER;
+        user.setStatus("logged out");
+        prefManager.updateCustomer(user.getId(), user);
+        finish();
     }
 }

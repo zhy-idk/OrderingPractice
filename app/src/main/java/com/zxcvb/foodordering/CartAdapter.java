@@ -11,48 +11,89 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
-    List<CartModel> cart;
+public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    public CartAdapter(List<CartModel> cart) {
-        this.cart = cart;
+    private static final int TYPE_HEADER = 0;
+    private static final int TYPE_ITEM = 1;
+
+    List<Object> items;
+
+    public CartAdapter(List<Object> items) {
+        this.items = items;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (items.get(position) instanceof String) {
+            return TYPE_HEADER;
+        }
+        return TYPE_ITEM;
     }
 
     @NonNull
     @Override
-    public CartAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.cart_item, parent, false);
-        return new ViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_HEADER) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.cart_header, parent, false);
+            return new HeaderViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.cart_item, parent, false);
+            return new ItemViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CartAdapter.ViewHolder holder, int position) {
-        holder.tvCartFood.setText(cart.get(position).getFoodName());
-        holder.tvCartRestaurant.setText(cart.get(position).getRestaurantName());
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof HeaderViewHolder) {
+            ((HeaderViewHolder) holder).tvHeader.setText((String) items.get(position));
+        } else if (holder instanceof ItemViewHolder) {
+            CartModel cart = (CartModel) items.get(position);
+            ItemViewHolder itemHolder = (ItemViewHolder) holder;
+            itemHolder.tvCartFood.setText(cart.getFoodName());
 
-        holder.btnRemove.setOnClickListener(view -> {
-            SharedPrefManager prefManager = new SharedPrefManager(holder.itemView.getContext());
-            cart.remove(holder.getBindingAdapterPosition());
+            itemHolder.btnRemove.setOnClickListener(view -> {
+                int pos = itemHolder.getBindingAdapterPosition();
+                if (pos == RecyclerView.NO_POSITION) return;
 
-            prefManager.saveCart(cart);
-            notifyDataSetChanged();
+                CartModel item = (CartModel) items.get(pos);
+                SharedPrefManager prefManager = new SharedPrefManager(itemHolder.itemView.getContext());
+                prefManager.deleteCart(item.getId());
 
-        });
+                items.remove(pos);
+
+                // Remove header if no more items under it
+                if (pos > 0 && items.get(pos - 1) instanceof String) {
+                    if (pos >= items.size() || items.get(pos) instanceof String) {
+                        items.remove(pos - 1);
+                    }
+                }
+
+                notifyDataSetChanged();
+            });
+        }
     }
 
     @Override
     public int getItemCount() {
-        return cart.size();
+        return items.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvCartFood, tvCartRestaurant;
+    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        TextView tvHeader;
+        public HeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvHeader = itemView.findViewById(R.id.tvCartHeader);
+        }
+    }
+
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        TextView tvCartFood;
         Button btnRemove;
-        public ViewHolder(@NonNull View itemView) {
+        public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCartFood = itemView.findViewById(R.id.tvCartFood);
-            tvCartRestaurant = itemView.findViewById(R.id.tvCartRestaurant);
             btnRemove = itemView.findViewById(R.id.btnRemove);
         }
     }
 }
+

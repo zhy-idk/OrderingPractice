@@ -8,42 +8,105 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SharedPrefManager {
     private static final String PREF_NAME = "FoodOrdering";
     private static final String KEY_CART = "cart";
     private static final String KEY_CUSTOMER = "customer";
 
-    SharedPreferences prefs;
-    Gson gson;
+    private SharedPreferences prefs;
+    private Gson gson;
 
     public SharedPrefManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         gson = new Gson();
     }
 
-    public void saveCustomer(List<CustomerModel> lists){
-        String json = gson.toJson(lists);
-        prefs.edit().putString(KEY_CUSTOMER, json).apply();
+    // ==================== CUSTOMER (HashMap CRUD) ====================
+
+    private void saveCustomerMap(Map<String, CustomerModel> map) {
+        prefs.edit().putString(KEY_CUSTOMER, gson.toJson(map)).apply();
     }
-    public List<CustomerModel> loadCustomer() {
+
+    public Map<String, CustomerModel> getCustomerMap() {
         String json = prefs.getString(KEY_CUSTOMER, null);
-        if(json == null) return new ArrayList<>();
-
-        Type type = new TypeToken<List<CustomerModel>>(){}.getType();
-        return gson.fromJson(json, type);
+        if (json == null)
+            return new HashMap<>();
+        Type type = new TypeToken<Map<String, CustomerModel>>() {
+        }.getType();
+        Map<String, CustomerModel> map = gson.fromJson(json, type);
+        return map != null ? map : new HashMap<>();
     }
 
-    public void saveCart(List<CartModel> lists) {
-        String json = gson.toJson(lists);
-        prefs.edit().putString(KEY_CART, json).apply();
+    public List<CustomerModel> loadCustomer() {
+        return new ArrayList<>(getCustomerMap().values());
     }
+
+    public void addCustomer(String id, CustomerModel customer) {
+        Map<String, CustomerModel> map = getCustomerMap();
+        map.put(id, customer);
+        saveCustomerMap(map);
+    }
+
+    public void updateCustomer(String id, CustomerModel customer) {
+        Map<String, CustomerModel> map = getCustomerMap();
+        if (map.containsKey(id)) {
+            map.put(id, customer);
+            saveCustomerMap(map);
+        }
+    }
+
+    public void deleteCustomer(String id) {
+        Map<String, CustomerModel> map = getCustomerMap();
+        if (map.containsKey(id)) {
+            map.remove(id);
+            saveCustomerMap(map);
+        }
+    }
+
+    // ==================== CART (HashMap CRUD) ====================
+
+    private void saveCartMap(Map<String, CartModel> map) {
+        prefs.edit().putString(KEY_CART, gson.toJson(map)).apply();
+    }
+
+    public Map<String, CartModel> getCartMap() {
+        String json = prefs.getString(KEY_CART, null);
+        if (json == null)
+            return new HashMap<>();
+        Type type = new TypeToken<Map<String, CartModel>>() {
+        }.getType();
+        Map<String, CartModel> map = gson.fromJson(json, type);
+        return map != null ? map : new HashMap<>();
+    }
+
     public List<CartModel> loadCartModel() {
-        String json = prefs.getString(KEY_CART,null);
-        if(json == null) return new ArrayList<>();
-
-        Type type = new TypeToken<List<CartModel>>(){}.getType();
-        return gson.fromJson(json, type);
+        return new ArrayList<>(getCartMap().values());
     }
+
+    public void addCart(String id, CartModel cart) {
+        Map<String, CartModel> map = getCartMap();
+        map.put(id, cart);
+        saveCartMap(map);
+    }
+
+    public void updateCart(String id, CartModel cart) {
+        Map<String, CartModel> map = getCartMap();
+        if (map.containsKey(id)) {
+            map.put(id, cart);
+            saveCartMap(map);
+        }
+    }
+
+    public void deleteCart(String id) {
+        Map<String, CartModel> map = getCartMap();
+        if (map.containsKey(id)) {
+            map.remove(id);
+            saveCartMap(map);
+        }
+    }
+
 }

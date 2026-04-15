@@ -38,10 +38,8 @@ public class AuthActivity extends AppCompatActivity {
         prefManager = new SharedPrefManager(this);
         customerList = prefManager.loadCustomer();
 
-
         etNameLogin = findViewById(R.id.etNameLogin);
         etPassLogin = findViewById(R.id.etPassLogin);
-
 
         etNameSignup = findViewById(R.id.etNameSignup);
         etEmailSignup = findViewById(R.id.etEmailSignup);
@@ -55,7 +53,7 @@ public class AuthActivity extends AppCompatActivity {
         signupLinear = findViewById(R.id.signupLinear);
 
         btnSwitch.setOnClickListener(view -> {
-            if(loginLinear.getVisibility() == View.VISIBLE){
+            if (loginLinear.getVisibility() == View.VISIBLE) {
                 loginLinear.setVisibility(View.GONE);
                 signupLinear.setVisibility(View.VISIBLE);
                 btnSwitch.setText("Have an account already? Login here!");
@@ -84,25 +82,27 @@ public class AuthActivity extends AppCompatActivity {
         checkLoggedIn();
 
     }
-    public void signUp(String name, String email, String pass){
+
+    public void signUp(String name, String email, String pass) {
         String id = UUID.randomUUID().toString();
         CustomerModel customerModel = new CustomerModel(id, name, email, pass, "logged out");
 
-        customerList.add(customerModel);
-
-        prefManager.saveCustomer(customerList);
+        prefManager.addCustomer(id, customerModel);
+        customerList = prefManager.loadCustomer();
         Toast.makeText(this, "Signed up successfully.", Toast.LENGTH_LONG).show();
     }
+
     public void login(String name, String pass) {
 
-        if(!name.isEmpty() && !pass.isEmpty()) {
-            for (int i = 0; i < customerList.size() ; i++) {
+        if (!name.isEmpty() && !pass.isEmpty()) {
+            for (int i = 0; i < customerList.size(); i++) {
                 String jsonlog = new Gson().toJson(customerList.get(i));
                 Log.d("auth", jsonlog);
-                if((customerList.get(i).getName().equals(name) || customerList.get(i).getEmail().equals(name)) && customerList.get(i).getPass().equals(pass)){
+                if ((customerList.get(i).getName().equals(name) || customerList.get(i).getEmail().equals(name))
+                        && customerList.get(i).getPass().equals(pass)) {
                     customerList.get(i).setStatus("logged in");
                     LOGGEDUSER = customerList.get(i);
-                    prefManager.saveCustomer(customerList);
+                    prefManager.updateCustomer(customerList.get(i).getId(), customerList.get(i));
                     String json = new Gson().toJson(customerList);
                     Log.d("auth", json);
                     Toast.makeText(this, "Logged in successfully.", Toast.LENGTH_LONG).show();
@@ -112,16 +112,16 @@ public class AuthActivity extends AppCompatActivity {
         }
     }
 
-    public void checkLoggedIn(){
+    public void checkLoggedIn() {
         String json = new Gson().toJson(customerList);
         Log.d("auth", json);
 
-//        if (customerList.contains("logged in")) {
-//            startActivity(new Intent(this, MainActivity.class));
-//        }
+        // if (customerList.contains("logged in")) {
+        // startActivity(new Intent(this, MainActivity.class));
+        // }
 
-        for (int i = 0; i < customerList.size() ; i++) {
-            if(customerList.get(i).getStatus().equals("logged in")){
+        for (int i = 0; i < customerList.size(); i++) {
+            if (customerList.get(i).getStatus().equals("logged in")) {
                 LOGGEDUSER = customerList.get(i);
                 startActivity(new Intent(this, MainActivity.class));
             } else {
@@ -129,6 +129,5 @@ public class AuthActivity extends AppCompatActivity {
             }
         }
     }
-
 
 }

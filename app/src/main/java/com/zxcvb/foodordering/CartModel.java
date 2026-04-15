@@ -1,16 +1,26 @@
 package com.zxcvb.foodordering;
 
 public class CartModel {
+    String id;
     String restaurantName;
     String foodName;
     String status;
     String customerId;
 
-    public CartModel(String restaurantName, String foodName, String status, String customerId) {
+    public CartModel(String id, String restaurantName, String foodName, String status, String customerId) {
+        this.id = id;
         this.restaurantName = restaurantName;
         this.foodName = foodName;
         this.status = status;
         this.customerId = customerId;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getRestaurantName() {

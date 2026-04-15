@@ -3,7 +3,6 @@ package com.zxcvb.foodordering;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -11,41 +10,69 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.ViewHolder>{
-    List<CartModel> cart;
+public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
-    public OrderAdapter(List<CartModel> cart) {
-        this.cart = cart;
+    private static final int TYPE_HEADER = 0;
+    private static final int TYPE_ITEM = 1;
+
+    List<Object> items;
+
+    public OrderAdapter(List<Object> items) {
+        this.items = items;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if (items.get(position) instanceof String) {
+            return TYPE_HEADER;
+        }
+        return TYPE_ITEM;
     }
 
     @NonNull
     @Override
-    public OrderAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.order_item, parent, false);
-        return new OrderAdapter.ViewHolder(view);
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == TYPE_HEADER) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.order_header, parent, false);
+            return new HeaderViewHolder(view);
+        } else {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.order_item, parent, false);
+            return new ItemViewHolder(view);
+        }
     }
 
     @Override
-    public void onBindViewHolder(@NonNull OrderAdapter.ViewHolder holder, int position) {
-        holder.tvOrderFood.setText(cart.get(position).getFoodName());
-        holder.tvOrderRestaurant.setText(cart.get(position).getRestaurantName());
-        holder.tvOrderStatus.setText(cart.get(position).getStatus());
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof HeaderViewHolder) {
+            ((HeaderViewHolder) holder).tvOrderHeader.setText((String) items.get(position));
+        } else if (holder instanceof ItemViewHolder) {
+            CartModel item = (CartModel) items.get(position);
+            ((ItemViewHolder) holder).tvOrderFood.setText(item.getFoodName());
+            ((ItemViewHolder) holder).tvOrderStatus.setText(item.getStatus());
+        }
     }
 
     @Override
     public int getItemCount() {
-        return cart.size();
+        return items.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvOrderFood, tvOrderRestaurant, tvOrderStatus;
+    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
+        TextView tvOrderHeader;
 
-        public ViewHolder(@NonNull View itemView) {
+        public HeaderViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvOrderHeader = itemView.findViewById(R.id.tvOrderHeader);
+        }
+    }
+
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        TextView tvOrderFood, tvOrderStatus;
+
+        public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvOrderFood = itemView.findViewById(R.id.tvOrderFood);
-            tvOrderRestaurant = itemView.findViewById(R.id.tvOrderRestaurant);
             tvOrderStatus = itemView.findViewById(R.id.tvOrderStatus);
-
         }
     }
 }

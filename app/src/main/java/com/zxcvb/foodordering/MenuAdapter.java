@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.UUID;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
@@ -35,13 +36,12 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
         holder.tvMenuItem.setText(menu.get(position));
         holder.btnAddToCart.setOnClickListener(view -> {
             SharedPrefManager prefs = new SharedPrefManager(view.getContext());
-            List<CartModel> cartModelList = prefs.loadCartModel();
 
             String userId = AuthActivity.LOGGEDUSER.getId();
-            CartModel cartModel = new CartModel(restaurant, menu.get(position), "cart", userId);
-            cartModelList.add(cartModel);
+            String cartId = UUID.randomUUID().toString();
+            CartModel cartModel = new CartModel(cartId, restaurant, menu.get(position), "cart", userId);
 
-            prefs.saveCart(cartModelList);
+            prefs.addCart(cartId, cartModel);
         });
 
     }
@@ -55,6 +55,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         TextView tvMenuItem;
         Button btnAddToCart;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvMenuItem = itemView.findViewById(R.id.tvMenuItem);
