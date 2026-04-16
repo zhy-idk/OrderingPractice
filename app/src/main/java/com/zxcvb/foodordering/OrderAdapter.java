@@ -46,9 +46,9 @@ public class OrderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).tvOrderHeader.setText((String) items.get(position));
         } else if (holder instanceof ItemViewHolder) {
-            CartModel item = (CartModel) items.get(position);
-            ((ItemViewHolder) holder).tvOrderFood.setText(item.getFoodName());
-            ((ItemViewHolder) holder).tvOrderStatus.setText(item.getStatus());
+            String[] entry = (String[]) items.get(position);
+            ((ItemViewHolder) holder).tvOrderFood.setText(entry[0]);
+            ((ItemViewHolder) holder).tvOrderStatus.setText(entry[1]);
         }
     }
 

@@ -9,7 +9,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
@@ -36,12 +39,30 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
         holder.tvMenuItem.setText(menu.get(position));
         holder.btnAddToCart.setOnClickListener(view -> {
             SharedPrefManager prefs = new SharedPrefManager(view.getContext());
-
             String userId = AuthActivity.LOGGEDUSER.getId();
-            String cartId = UUID.randomUUID().toString();
-            CartModel cartModel = new CartModel(cartId, restaurant, menu.get(position), "cart", userId);
 
-            prefs.addCart(cartId, cartModel);
+            // Find existing cart entry for this restaurant
+            Map<String, CartModel> cartMap = prefs.getCartMap();
+            CartModel existing = null;
+            for (CartModel cm : cartMap.values()) {
+                if (cm.getCustomerId().equals(userId)
+                        && cm.getRestaurantName().equals(restaurant)
+                        && cm.getStatus().equals("cart")) {
+                    existing = cm;
+                    break;
+                }
+            }
+
+            if (existing != null) {
+                existing.addFood(menu.get(position));
+                prefs.updateCart(existing.getId(), existing);
+            } else {
+                String cartId = UUID.randomUUID().toString();
+                List<String> foods = new ArrayList<>();
+                foods.add(menu.get(position));
+                CartModel cartModel = new CartModel(cartId, restaurant, foods, "cart", userId);
+                prefs.addCart(cartId, cartModel);
+            }
         });
 
     }

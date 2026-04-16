@@ -1,16 +1,19 @@
 package com.zxcvb.foodordering;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CartModel {
     String id;
     String restaurantName;
-    String foodName;
+    List<String> foodNames;
     String status;
     String customerId;
 
-    public CartModel(String id, String restaurantName, String foodName, String status, String customerId) {
+    public CartModel(String id, String restaurantName, List<String> foodNames, String status, String customerId) {
         this.id = id;
         this.restaurantName = restaurantName;
-        this.foodName = foodName;
+        this.foodNames = foodNames;
         this.status = status;
         this.customerId = customerId;
     }
@@ -31,12 +34,25 @@ public class CartModel {
         this.restaurantName = restaurantName;
     }
 
-    public String getFoodName() {
-        return foodName;
+    public List<String> getFoodNames() {
+        return foodNames;
     }
 
-    public void setFoodName(String foodName) {
-        this.foodName = foodName;
+    public void setFoodNames(List<String> foodNames) {
+        this.foodNames = foodNames;
+    }
+
+    public void addFood(String foodName) {
+        if (this.foodNames == null) {
+            this.foodNames = new ArrayList<>();
+        }
+        this.foodNames.add(foodName);
+    }
+
+    public void removeFood(String foodName) {
+        if (this.foodNames != null) {
+            this.foodNames.remove(foodName);
+        }
     }
 
     public String getStatus() {

@@ -14,17 +14,19 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class OrderFragment extends Fragment {
 
     RecyclerView rvOrder;
     List<CartModel> orderModelList;
-    List<Object> groupedList;
+    List<Object> displayList;
     SharedPrefManager prefManager;
     OrderAdapter adapter;
+
+    Map<String, CartModel> orderModelHashMap;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -46,9 +48,17 @@ public class OrderFragment extends Fragment {
         prefManager = new SharedPrefManager(view.getContext());
         rvOrder = view.findViewById(R.id.rvOrder);
         queryUserCart();
-        groupedList = groupByRestaurant(orderModelList);
 
-        adapter = new OrderAdapter(groupedList);
+        // Build flat display list directly from CartModels (no grouping needed)
+        displayList = new ArrayList<>();
+        for (CartModel cart : orderModelList) {
+            displayList.add(cart.getRestaurantName());
+            for (String food : cart.getFoodNames()) {
+                displayList.add(new String[] { food, cart.getStatus() });
+            }
+        }
+
+        adapter = new OrderAdapter(displayList);
         rvOrder.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rvOrder.setAdapter(adapter);
 
@@ -56,29 +66,11 @@ public class OrderFragment extends Fragment {
 
     public void queryUserCart() {
         String userId = AuthActivity.LOGGEDUSER.getId();
-        orderModelList = prefManager.loadCartModel();
-        List<CartModel> result = new ArrayList<>();
+        orderModelHashMap = prefManager.getCartMap();
 
-        for (int i = 0; i < orderModelList.size(); i++) {
-            if (orderModelList.get(i).getCustomerId().equals(userId)
-                    && !orderModelList.get(i).getStatus().equals("cart")) {
-                result.add(orderModelList.get(i));
-            }
-        }
-
-        orderModelList = result;
-    }
-
-    public List<Object> groupByRestaurant(List<CartModel> cartItems) {
-        Map<String, List<CartModel>> grouped = new LinkedHashMap<>();
-        for (CartModel item : cartItems) {
-            grouped.computeIfAbsent(item.getRestaurantName(), k -> new ArrayList<>()).add(item);
-        }
-        List<Object> result = new ArrayList<>();
-        for (Map.Entry<String, List<CartModel>> entry : grouped.entrySet()) {
-            result.add(entry.getKey());
-            result.addAll(entry.getValue());
-        }
-        return result;
+        orderModelList = orderModelHashMap.values().stream()
+                .filter(r -> r.getCustomerId().equals(userId))
+                .filter(r -> !r.getStatus().equals("cart"))
+                .collect(Collectors.toList());
     }
 }

@@ -18,17 +18,19 @@ import android.widget.Button;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CartFragment extends Fragment {
     RecyclerView rvCart;
     Button btnCheckout;
     List<CartModel> cartModelList;
-    List<Object> groupedList;
+    List<Object> displayList;
     SharedPrefManager prefManager;
     CartAdapter adapter;
+
+    Map<String, CartModel> cartModelHashMap;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,14 +51,22 @@ public class CartFragment extends Fragment {
         prefManager = new SharedPrefManager(view.getContext());
         rvCart = view.findViewById(R.id.rvCart);
         queryUserCart();
-        groupedList = groupByRestaurant(cartModelList);
+
+        // Build flat display list directly from CartModels (no grouping needed)
+        displayList = new ArrayList<>();
+        for (CartModel cart : cartModelList) {
+            displayList.add(cart.getRestaurantName());
+            for (String food : cart.getFoodNames()) {
+                displayList.add(new String[] { cart.getId(), food });
+            }
+        }
 
         Gson gson = new Gson();
         Log.d("CartFragment", "Raw cart data: " + gson.toJson(prefManager.getCartMap()));
         Log.d("CartFragment", "Filtered user cart: " + gson.toJson(cartModelList));
-        Log.d("CartFragment", "Grouped list: " + gson.toJson(groupedList));
+        Log.d("CartFragment", "Display list size: " + displayList.size());
 
-        adapter = new CartAdapter(groupedList);
+        adapter = new CartAdapter(displayList);
         rvCart.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false));
         rvCart.setAdapter(adapter);
 
@@ -69,17 +79,12 @@ public class CartFragment extends Fragment {
 
     public void queryUserCart() {
         String userId = AuthActivity.LOGGEDUSER.getId();
-        cartModelList = prefManager.loadCartModel();
-        List<CartModel> result = new ArrayList<>();
+        cartModelHashMap = prefManager.getCartMap();
 
-        for (int i = 0; i < cartModelList.size(); i++) {
-            if (cartModelList.get(i).getCustomerId().equals(userId)
-                    && cartModelList.get(i).getStatus().equals("cart")) {
-                result.add(cartModelList.get(i));
-            }
-        }
-
-        cartModelList = result;
+        cartModelList = cartModelHashMap.values().stream()
+                .filter(r -> r.getCustomerId().equals(userId))
+                .filter(r -> r.getStatus().equals("cart"))
+                .collect(Collectors.toList());
     }
 
     public void setStatus() {
@@ -87,21 +92,10 @@ public class CartFragment extends Fragment {
             cartModelList.get(i).setStatus("preparing");
             prefManager.updateCart(cartModelList.get(i).getId(), cartModelList.get(i));
         }
+
         cartModelList.clear();
-        groupedList.clear();
+        displayList.clear();
         adapter.notifyDataSetChanged();
     }
 
-    public List<Object> groupByRestaurant(List<CartModel> cartItems) {
-        Map<String, List<CartModel>> grouped = new LinkedHashMap<>();
-        for (CartModel item : cartItems) {
-            grouped.computeIfAbsent(item.getRestaurantName(), k -> new ArrayList<>()).add(item);
-        }
-        List<Object> result = new ArrayList<>();
-        for (Map.Entry<String, List<CartModel>> entry : grouped.entrySet()) {
-            result.add(entry.getKey());
-            result.addAll(entry.getValue());
-        }
-        return result;
-    }
 }

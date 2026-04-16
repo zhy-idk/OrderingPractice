@@ -16,7 +16,9 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class AuthActivity extends AppCompatActivity {
 
@@ -25,6 +27,8 @@ public class AuthActivity extends AppCompatActivity {
     TextView btnSwitch;
     SharedPrefManager prefManager;
     List<CustomerModel> customerList;
+
+    Map<String, CustomerModel> customerModelMap;
 
     LinearLayout loginLinear, signupLinear;
 
@@ -115,18 +119,17 @@ public class AuthActivity extends AppCompatActivity {
     public void checkLoggedIn() {
         String json = new Gson().toJson(customerList);
         Log.d("auth", json);
+        customerModelMap = prefManager.getCustomerMap();
 
-        // if (customerList.contains("logged in")) {
-        // startActivity(new Intent(this, MainActivity.class));
-        // }
+        LOGGEDUSER = customerModelMap.values().stream()
+                .filter(u -> u.getStatus().equals("logged in"))
+                .findAny()
+                .orElse(null);
 
-        for (int i = 0; i < customerList.size(); i++) {
-            if (customerList.get(i).getStatus().equals("logged in")) {
-                LOGGEDUSER = customerList.get(i);
-                startActivity(new Intent(this, MainActivity.class));
-            } else {
-                Toast.makeText(this, "Logged in successfully.", Toast.LENGTH_LONG).show();
-            }
+        if (LOGGEDUSER != null) {
+            startActivity(new Intent(this, MainActivity.class));
+        } else {
+            Log.d("auth", "No logged in user found");
         }
     }
 

@@ -11,5 +11,10 @@
         <item name="android:padding">10dp</item>
     </style>
 
+    <style name="activeItem">
+        <item name="itemIconTint">@color/white</item>
+        <item name="itemTextColor">@color/white</item>
+    </style>
+
     <style name="Theme.FoodOrdering" parent="Base.Theme.FoodOrdering" />
 </resources>

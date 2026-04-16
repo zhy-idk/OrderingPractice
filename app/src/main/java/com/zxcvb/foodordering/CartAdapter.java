@@ -47,17 +47,30 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (holder instanceof HeaderViewHolder) {
             ((HeaderViewHolder) holder).tvHeader.setText((String) items.get(position));
         } else if (holder instanceof ItemViewHolder) {
-            CartModel cart = (CartModel) items.get(position);
+            String[] foodEntry = (String[]) items.get(position);
+            String cartId = foodEntry[0];
+            String foodName = foodEntry[1];
             ItemViewHolder itemHolder = (ItemViewHolder) holder;
-            itemHolder.tvCartFood.setText(cart.getFoodName());
+            itemHolder.tvCartFood.setText(foodName);
 
             itemHolder.btnRemove.setOnClickListener(view -> {
                 int pos = itemHolder.getBindingAdapterPosition();
-                if (pos == RecyclerView.NO_POSITION) return;
+                if (pos == RecyclerView.NO_POSITION)
+                    return;
 
-                CartModel item = (CartModel) items.get(pos);
+                String[] entry = (String[]) items.get(pos);
                 SharedPrefManager prefManager = new SharedPrefManager(itemHolder.itemView.getContext());
-                prefManager.deleteCart(item.getId());
+
+                // Remove food from the CartModel's list
+                CartModel cart = prefManager.getCartMap().get(entry[0]);
+                if (cart != null) {
+                    cart.removeFood(entry[1]);
+                    if (cart.getFoodNames().isEmpty()) {
+                        prefManager.deleteCart(entry[0]);
+                    } else {
+                        prefManager.updateCart(entry[0], cart);
+                    }
+                }
 
                 items.remove(pos);
 
@@ -80,6 +93,7 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     public static class HeaderViewHolder extends RecyclerView.ViewHolder {
         TextView tvHeader;
+
         public HeaderViewHolder(@NonNull View itemView) {
             super(itemView);
             tvHeader = itemView.findViewById(R.id.tvCartHeader);
@@ -89,6 +103,7 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         TextView tvCartFood;
         Button btnRemove;
+
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             tvCartFood = itemView.findViewById(R.id.tvCartFood);
@@ -96,4 +111,3 @@ public class CartAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
     }
 }
-
